@@ -18,7 +18,8 @@ export const wagmiAdapter = new WagmiAdapter({
   }),
   ssr: true,
   networks,
-  projectId
+  projectId,
 })
+
 
 export const config = wagmiAdapter.wagmiConfig

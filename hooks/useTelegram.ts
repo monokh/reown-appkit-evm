@@ -7,6 +7,7 @@ export const useTelegram = (): any => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const tg = window.Telegram.WebApp;
       tg.ready();
+      console.log('TELEGRAM IS READY')
       setWebApp(tg);
     }
   }, []);

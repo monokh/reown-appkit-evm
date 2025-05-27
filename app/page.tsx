@@ -1,17 +1,26 @@
 "use client";
-import { useAccount } from "wagmi";
+import { useAccount, useConnections, useDisconnect } from "wagmi";
 import { useTelegram } from '../hooks/useTelegram';
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
-  const { isConnected, address } = useAccount();
+
+  const [ appLoaded, setAppLoaded ] = useState(false);
+  const { isConnected, address, isConnecting } = useAccount();
+
   const webApp = useTelegram();
 
   useEffect(() => {
-    if (isConnected && address && webApp) {
+    if (isConnected && address) {
+      console.log('ADDRESS CONNECTED', address);
       // Send the address to the bot when connected
-      webApp.sendData(`${address}`);
-      console.log('SENT ADDRESS')
+      console.log({webApp})
+      if (webApp) {
+        setTimeout(() => {
+          webApp.sendData(`${address}`);
+          console.log('SENT ADDRESS')
+        }, 5000);
+      }
     }
   }, [address, isConnected, webApp])
 
