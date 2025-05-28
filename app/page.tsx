@@ -1,28 +1,69 @@
 "use client";
-import { useAccount, useConnections, useDisconnect } from "wagmi";
+import { useAccount, useConnections, useSignMessage } from "wagmi";
 import { useTelegram } from '../hooks/useTelegram';
 import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
-
   const [ appLoaded, setAppLoaded ] = useState(false);
   const { isConnected, address, isConnecting } = useAccount();
+  const [ messageToSign, setMessageToSign ] = useState<string | null>(null);
+  const { signMessageAsync } = useSignMessage();
+  const connections = useConnections();
 
   const webApp = useTelegram();
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    const params = Array.from(urlParams.entries()).reduce((acc :{[key: string]: string}, [key, value]) => {
+      acc[key] = value;
+      return acc;
+    }, {});
+
+    if ("message" in params) {
+      setAppLoaded(true);
+      setMessageToSign(params.message);
+    }
+    
+    console.log('Query parameters:', params);
+  }, []);
 
   useEffect(() => {
     if (isConnected && address) {
       console.log('ADDRESS CONNECTED', address);
       // Send the address to the bot when connected
       console.log({webApp})
-      if (webApp) {
+      if (webApp && appLoaded && !messageToSign) {
         setTimeout(() => {
-          webApp.sendData(`${address}`);
+          webApp.sendData(JSON.stringify({
+            type: 'connection',
+            data: {
+              address: `${address}`
+            }
+          }));
           console.log('SENT ADDRESS')
         }, 5000);
       }
     }
-  }, [address, isConnected, webApp])
+  }, [address, isConnected, webApp, appLoaded, messageToSign]);
+
+  useEffect(() => { 
+    if (messageToSign && webApp && appLoaded && connections.length > 0) {
+      signMessageAsync({
+        account: address, message: messageToSign,
+      }).then((signature) => {
+         webApp.sendData(JSON.stringify({
+            type: 'signature',
+            data: {
+              message: messageToSign,
+              address,
+              signature,
+            }
+          }));
+          console.log('SENT SIGNATURE');
+      });
+    }
+  }, [messageToSign, webApp, appLoaded, address, signMessageAsync, connections]);
 
   return (
     <main className="min-h-screen px-8 py-0 pb-12 flex-1 flex flex-col items-center">
