@@ -21,9 +21,10 @@ export default function Home() {
     }, {});
 
     if ("message" in params) {
-      setAppLoaded(true);
       setMessageToSign(params.message);
     }
+
+    setAppLoaded(true);
     
     console.log('Query parameters:', params);
   }, []);
